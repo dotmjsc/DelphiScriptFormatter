@@ -12,6 +12,8 @@ Here is a little Python program that:
 * Formats the Result with Quadroids CLI Formatter
 * Removes the formerly added elements from the result and writes the formatted code back
 * A backup of your code will be generated (.bak)
+
+![Program](/docs/Prog.PNG)
      
 Usage:
 * Extract everything to a folder and run "FormatDS.exe"
