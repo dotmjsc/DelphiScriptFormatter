@@ -1,5 +1,5 @@
 # DelphiScriptFormatter
-A Formatter Using Quadroids Binaries that also supports DelphiScript and Code Snippets
+A Formatter Using [Quadroids Binaries](https://github.com/quadroid/jcf-pascal-format/releases/tag/v1.0.1) that also supports DelphiScript and Code Snippets
 
 Formatting Altium Delphi Script Code is not trivial. The problem is that tools like
 [JEDI Code Format](https://jedicodeformat.sourceforge.net/)
