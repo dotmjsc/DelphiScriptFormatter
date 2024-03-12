@@ -16,6 +16,7 @@ Here is a little Python program that:
 ![Program](/docs/Prog.PNG)
      
 Usage:
+* Get the latest release from [HERE](https://github.com/dotmjsc/DelphiScriptFormatter/releases/)
 * Extract everything to a folder and run "FormatDS.exe"
 * Open your DelphiScript file with "Open"
 * Optionally load a different Config File (than the pascal-format.cfg in the folder)
