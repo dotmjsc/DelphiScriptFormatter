@@ -13,7 +13,7 @@ Here is a little Python program that:
 * Removes the formerly added elements from the result and writes the formatted code back
 * A backup of your code will be generated (.bak)
 
-![Program](/docs/Prog.PNG)
+![Program](/doc/Prog.PNG)
      
 Usage:
 * Get the latest release from [HERE](https://github.com/dotmjsc/DelphiScriptFormatter/releases/)
