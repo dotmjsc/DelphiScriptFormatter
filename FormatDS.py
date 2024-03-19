@@ -11,7 +11,7 @@ import time
 class FileProcessorGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("DelphiScript Formatter 0.2")
+        self.master.title("DelphiScript Formatter 0.3")
 
         # Set minimum window size
         self.master.minsize(width=400, height=150)
@@ -20,13 +20,29 @@ class FileProcessorGUI:
         self.config_file_path = None
         self.rev_config_file_path = None
 
+
+
         self.file_path_label = tk.Label(self.master, text="File Path:")
-        self.file_path_label.pack()
+        self.file_path_label.pack(padx=10, pady=(5, 0), anchor=tk.W)
 
         self.config_label_text = tk.StringVar()
         self.config_label_text.set("Config File: Default")
         self.file_path_label_cfg = tk.Label(self.master, textvariable=self.config_label_text)
-        self.file_path_label_cfg.pack()
+        self.file_path_label_cfg.pack(padx=10, pady=(0, 5), anchor=tk.W)
+
+        # Checkbox for Function declaration format comma handler
+        self.comma_handler_var = tk.BooleanVar()
+        self.comma_handler_checkbox = tk.Checkbutton(self.master, text="Function declaration format comma handler",
+                                                     variable=self.comma_handler_var,
+                                                     command=self.update_checkbox_state)
+        self.comma_handler_checkbox.pack(padx=10, pady=(5, 0), anchor=tk.W)
+
+        # Checkbox for Change declaration delimiters to semicolons
+        self.delimiter_handler_var = tk.BooleanVar()
+        self.delimiter_handler_checkbox = tk.Checkbutton(self.master,
+                                                         text="Change declaration delimiters to semicolons",
+                                                         variable=self.delimiter_handler_var, state=tk.DISABLED)
+        self.delimiter_handler_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
 
         self.open_button = tk.Button(self.master, text="Open", command=self.open_file, width=15, height=2)
         self.open_button.pack(side=tk.LEFT, padx=10, pady=5)
@@ -38,6 +54,13 @@ class FileProcessorGUI:
         self.load_config_button = tk.Button(self.master, text="Load Config", command=self.load_config, width=15,
                                             height=2)
         self.load_config_button.pack(side=tk.LEFT, padx=10, pady=5)
+
+    def update_checkbox_state(self):
+        if not self.comma_handler_var.get():
+            self.delimiter_handler_var.set(False)
+            self.delimiter_handler_checkbox.config(state=tk.DISABLED)
+        else:
+            self.delimiter_handler_checkbox.config(state=tk.NORMAL)
 
     def open_file(self):
         file_path = filedialog.askopenfilename(filetypes=[("Pascal files", "*.pas")])
@@ -93,6 +116,27 @@ class FileProcessorGUI:
             result = chardet.detect(f.read())
             return result['encoding']
 
+    def convert_declaration_format(self, line: str, to_script: bool):
+        old_char = ','
+        new_char = ';'
+        # Direction setting
+        if to_script:
+            old_char = ';'
+            new_char = ','
+        # Check if the line starts with "procedure" or "function"
+        if line.strip().startswith(('procedure', 'function')):
+            # Find the position of the opening and closing parentheses
+            start_index = line.find('(')
+            end_index = line.find(')')
+
+            # If both opening and closing parentheses are found
+            if start_index != -1 and end_index != -1:
+                # Replace commas with semicolons within the parentheses
+                line = line[:start_index + 1] + line[start_index + 1:end_index].replace(old_char, new_char) + line[
+                                                                                                              end_index:]
+
+        return line
+
     def process_file(self):
         # Make a backup copy with .bak extension
         bak_file_path = self.file_path + ".bak"
@@ -103,9 +147,14 @@ class FileProcessorGUI:
 
         # Modify the file content
         with open(self.file_path, 'r', encoding=source_encoding) as original_file:
-            content = original_file.read()
+            content = original_file.readlines()
 
-        modified_content = "unit Test;\ninterface\nimplementation\n\n" + content + "\nend."
+        # Process declaration formatting
+        if self.comma_handler_var.get():
+            for i, line in enumerate(content):
+                content[i] = self.convert_declaration_format(line, False)
+
+        modified_content = "unit Test;\ninterface\nimplementation\n\n" + ''.join(content) + "\nend."
 
         with open(self.file_path + ".wrk", 'w', encoding=source_encoding) as new_file:
             new_file.write(modified_content)
@@ -133,6 +182,12 @@ class FileProcessorGUI:
         # After command completion, remove the added lines
         with open(self.file_path + ".wrk", 'r', encoding=formatted_encoding) as processed_file:
             lines = processed_file.readlines()
+
+            # Process declaration formatting
+            if self.comma_handler_var.get() and not self.delimiter_handler_var.get():
+                for i, line in enumerate(lines):
+                    lines[i] = self.convert_declaration_format(line, True)
+
             lines_to_write = [line for line in lines if line.strip() not in ("unit Test;", "interface", "implementation", "end.")]
 
         # Remove newlines from the beginning
