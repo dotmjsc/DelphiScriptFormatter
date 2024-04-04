@@ -1,0 +1,1 @@
+if (a=b) and (a like c) and not (c = e) and (e like f)  and (u = i)   and (u = i)  and (a like c) then  // test something like nothing

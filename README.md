@@ -27,6 +27,26 @@ Usage:
 * Function declaration comma Handling:
   * If this box is checked, it will replace all commas in function and procedure declarations with semicolons so that JCF can handle it
   * If "Change declaration delimiters to semicolons" is set then the declaration delimiters will stay semicolons, else they will be changed back to commas after formatting
+* Preprocess 'like' statement: check this box to preprocess the like statement so that JCF can format the code
 
-Config File:
+<u>Config File:</u>
 Optionally, you can load your own Config File. Config files made with the GUI of the old [JEDI Code Format](https://jedicodeformat.sourceforge.net/) are automatically detected and converted.
+
+
+
+<u>Processing of like statements:</u>
+
+Optionally, the unsupported like statements are preprocessed so that JCF can handle the file. For this a non-comment line or the non comment part of a line like this
+
+```
+if (a=b) and (a like c) and not (c = e) and (e like f)  and (u = i)   and (u = i)  and (a like c) then  // test something like nothing
+```
+
+will be analysed, then the like statements will be each bereplaced by a '='. A comment line will be added above that has restoring info:
+
+```
+// LIKEPROCESSING_INFO: 1,3,6
+if (a=b) and (a = c) and not (c = e) and (e = f)  and (u = i)   and (u = i)  and (a = c) then  // test something like nothing
+```
+
+After formatting with JCF, the tool searches for these comments and restores the 'like' statements to their original positions. finally, the like processing comments are removed from the formatted code.

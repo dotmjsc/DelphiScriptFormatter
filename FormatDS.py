@@ -6,12 +6,12 @@ import subprocess
 import sys
 import chardet
 import time
-
+from like_handler import like_processing_content_restore, like_processing_content_preprocess
 
 class FileProcessorGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("DelphiScript Formatter 0.3")
+        self.master.title("DelphiScript Formatter 0.4")
 
         # Set minimum window size
         self.master.minsize(width=400, height=150)
@@ -43,6 +43,12 @@ class FileProcessorGUI:
                                                          text="Change declaration delimiters to semicolons",
                                                          variable=self.delimiter_handler_var, state=tk.DISABLED)
         self.delimiter_handler_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
+
+        self.like_handler_var = tk.BooleanVar()
+        self.like_handler_checkbox = tk.Checkbutton(self.master,
+                                                         text="Preprocess \'like\' statement",
+                                                         variable=self.like_handler_var)
+        self.like_handler_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
 
         self.open_button = tk.Button(self.master, text="Open", command=self.open_file, width=15, height=2)
         self.open_button.pack(side=tk.LEFT, padx=10, pady=5)
@@ -146,13 +152,16 @@ class FileProcessorGUI:
         source_encoding = self.detect_encoding(self.file_path)
 
         # Modify the file content
-        with open(self.file_path, 'r', encoding=source_encoding) as original_file:
+        with open(self.file_path, 'r', encoding=source_encoding, errors='ignore') as original_file:
             content = original_file.readlines()
 
         # Process declaration formatting
         if self.comma_handler_var.get():
             for i, line in enumerate(content):
                 content[i] = self.convert_declaration_format(line, False)
+
+        if self.like_handler_var.get():
+            content = like_processing_content_preprocess(content)
 
         modified_content = "unit Test;\ninterface\nimplementation\n\n" + ''.join(content) + "\nend."
 
@@ -189,6 +198,10 @@ class FileProcessorGUI:
                     lines[i] = self.convert_declaration_format(line, True)
 
             lines_to_write = [line for line in lines if line.strip() not in ("unit Test;", "interface", "implementation", "end.")]
+
+        # restore likes on the content if necessary
+        if self.like_handler_var.get():
+            lines_to_write = like_processing_content_restore(lines_to_write)
 
         # Remove newlines from the beginning
         while lines_to_write and lines_to_write[0] == "\n":
