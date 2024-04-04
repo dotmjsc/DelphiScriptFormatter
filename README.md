@@ -29,12 +29,13 @@ Usage:
   * If "Change declaration delimiters to semicolons" is set then the declaration delimiters will stay semicolons, else they will be changed back to commas after formatting
 * Preprocess 'like' statement: check this box to preprocess the like statement so that JCF can format the code
 
-<u>Config File:</u>
+**Config File:**
+
 Optionally, you can load your own Config File. Config files made with the GUI of the old [JEDI Code Format](https://jedicodeformat.sourceforge.net/) are automatically detected and converted.
 
 
 
-<u>Processing of like statements:</u>
+**Processing of like statements:**
 
 Optionally, the unsupported like statements are preprocessed so that JCF can handle the file. For this a non-comment line or the non comment part of a line like this
 
