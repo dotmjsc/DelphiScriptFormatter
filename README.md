@@ -37,17 +37,17 @@ Optionally, you can load your own Config File. Config files made with the GUI of
 
 **Processing of like statements:**
 
-Optionally, the unsupported like statements are preprocessed so that JCF can handle the file. For this a non-comment line or the non comment part of a line like this
+Optionally, the unsupported like statements are preprocessed so that JCF can handle the file. For this a non-comment line (or the non comment part of a line) like this:
 
 ```
 if (a=b) and (a like c) and not (c = e) and (e like f)  and (u = i)   and (u = i)  and (a like c) then  // test something like nothing
 ```
 
-will be analysed, then the like statements will be each bereplaced by a '='. A comment line will be added above that has restoring info:
+will be analysed. Found like statements will each be replaced by a '=' and a comment line will be added above with restoring info:
 
 ```
 // LIKEPROCESSING_INFO: 1,3,6
 if (a=b) and (a = c) and not (c = e) and (e = f)  and (u = i)   and (u = i)  and (a = c) then  // test something like nothing
 ```
 
-After formatting with JCF, the tool searches for these comments and restores the 'like' statements to their original positions. finally, the like processing comments are removed from the formatted code.
+After formatting with JCF, the tool searches for these comment lines and restores the 'like' statements to their original positions. Finally, the like processing comments are removed from the formatted code.
