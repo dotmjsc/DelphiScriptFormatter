@@ -24,23 +24,19 @@ def like_processing_content_preprocess(content):
 def like_processing_content_restore(content_modified):
     restored_content = []
     processing_info_found = False
-    leading_whitespace = ""
     processing_info = ""
 
     for line in content_modified:
         if line.strip().startswith("// LIKEPROCESSING_INFO:"):
             # Found a line containing 'LIKEPROCESSING_INFO'
             processing_info_found = True
-            # Extract leading whitespace from the current line
-            leading_whitespace = line[:len(line) - len(line.lstrip())]
             processing_info = line.strip()[len("// LIKEPROCESSING_INFO:"):].split(",")
             continue
 
         if processing_info_found:
             # Restore the original content
             original_line = revert_like_statements(line, processing_info)
-            # Add leading whitespace back to the original line
-            restored_content.append(leading_whitespace + original_line)
+            restored_content.append(original_line)
             processing_info_found = False
         else:
             restored_content.append(line)
@@ -109,7 +105,7 @@ if __name__ == '__main__':
             return result['encoding']
 
 
-    filename = "test_like_handling.pas"
+    filename = "tests/test_like_handling.pas"
 
     # Example usage:
     source_encoding = detect_encoding(filename)

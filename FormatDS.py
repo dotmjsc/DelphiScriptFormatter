@@ -1,17 +1,19 @@
 import tkinter as tk
 from tkinter import filedialog
+import configparser
 import shutil
 import os
 import subprocess
 import sys
 import chardet
-import time
+
 from like_handler import like_processing_content_restore, like_processing_content_preprocess
+
 
 class FileProcessorGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("DelphiScript Formatter 0.4")
+        self.master.title("DelphiScript Formatter 0.5")
 
         # Set minimum window size
         self.master.minsize(width=400, height=150)
@@ -20,7 +22,12 @@ class FileProcessorGUI:
         self.config_file_path = None
         self.rev_config_file_path = None
 
-
+        # Initialize checkbox variables
+        self.comma_handler_var = tk.BooleanVar()
+        self.delimiter_handler_var = tk.BooleanVar()
+        self.like_handler_var = tk.BooleanVar()
+        self.generate_bak_var = tk.BooleanVar()
+        self.keep_work_var = tk.BooleanVar()
 
         self.file_path_label = tk.Label(self.master, text="File Path:")
         self.file_path_label.pack(padx=10, pady=(5, 0), anchor=tk.W)
@@ -34,21 +41,38 @@ class FileProcessorGUI:
         self.comma_handler_var = tk.BooleanVar()
         self.comma_handler_checkbox = tk.Checkbutton(self.master, text="Function declaration format comma handler",
                                                      variable=self.comma_handler_var,
-                                                     command=self.update_checkbox_state)
+                                                     command=self.update_config_file)
         self.comma_handler_checkbox.pack(padx=10, pady=(5, 0), anchor=tk.W)
 
         # Checkbox for Change declaration delimiters to semicolons
         self.delimiter_handler_var = tk.BooleanVar()
         self.delimiter_handler_checkbox = tk.Checkbutton(self.master,
                                                          text="Change declaration delimiters to semicolons",
-                                                         variable=self.delimiter_handler_var, state=tk.DISABLED)
+                                                         variable=self.delimiter_handler_var,
+                                                         command=self.update_config_file,
+                                                         state=tk.DISABLED)
         self.delimiter_handler_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
 
         self.like_handler_var = tk.BooleanVar()
         self.like_handler_checkbox = tk.Checkbutton(self.master,
-                                                         text="Preprocess \'like\' statement",
-                                                         variable=self.like_handler_var)
+                                                    text="Preprocess \'like\' operator",
+                                                    variable=self.like_handler_var,
+                                                    command=self.update_config_file)
         self.like_handler_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
+
+        self.generate_bak_var = tk.BooleanVar()
+        self.generate_bak_checkbox = tk.Checkbutton(self.master,
+                                                    text="Make backup (.bak) file",
+                                                    variable=self.generate_bak_var,
+                                                    command=self.update_config_file)
+        self.generate_bak_checkbox.pack(padx=10, pady=(5, 0), anchor=tk.W)
+
+        self.keep_work_var = tk.BooleanVar()
+        self.keep_work_checkbox = tk.Checkbutton(self.master,
+                                                 text="Keep work (.wrk) file",
+                                                 variable=self.keep_work_var,
+                                                 command=self.update_config_file)
+        self.keep_work_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
 
         self.open_button = tk.Button(self.master, text="Open", command=self.open_file, width=15, height=2)
         self.open_button.pack(side=tk.LEFT, padx=10, pady=5)
@@ -61,7 +85,40 @@ class FileProcessorGUI:
                                             height=2)
         self.load_config_button.pack(side=tk.LEFT, padx=10, pady=5)
 
-    def update_checkbox_state(self):
+        # Load setting states from config file
+        self.load_settings()
+
+    def load_settings(self):
+        config = configparser.ConfigParser()
+        try:
+            config.read('DSF_settings.ini')
+            self.comma_handler_var.set(config.getboolean('Settings', 'comma_handler'))
+            self.delimiter_handler_var.set(config.getboolean('Settings', 'delimiter_handler'))
+            self.like_handler_var.set(config.getboolean('Settings', 'like_handler'))
+            self.generate_bak_var.set(config.getboolean('Settings', 'generate_bak'))
+            self.keep_work_var.set(config.getboolean('Settings', 'keep_work_file'))
+            self.update_checkbox_states()
+        except configparser.Error:
+            # If there's any issue reading the config file, all checkboxes will be set to default (False)
+            pass
+
+    def save_settings(self):
+        config = configparser.ConfigParser()
+        config['Settings'] = {
+            'comma_handler': self.comma_handler_var.get(),
+            'delimiter_handler': self.delimiter_handler_var.get(),
+            'like_handler': self.like_handler_var.get(),
+            'generate_bak': self.generate_bak_var.get(),
+            'keep_work_file': self.keep_work_var.get()
+        }
+        with open('DSF_settings.ini', 'w') as configfile:
+            config.write(configfile)
+
+    def update_config_file(self):
+        self.save_settings()
+        self.update_checkbox_states()
+
+    def update_checkbox_states(self):
         if not self.comma_handler_var.get():
             self.delimiter_handler_var.set(False)
             self.delimiter_handler_checkbox.config(state=tk.DISABLED)
@@ -146,7 +203,8 @@ class FileProcessorGUI:
     def process_file(self):
         # Make a backup copy with .bak extension
         bak_file_path = self.file_path + ".bak"
-        shutil.copy2(self.file_path, bak_file_path)
+        if self.generate_bak_var:
+            shutil.copy2(self.file_path, bak_file_path)
 
         # Detect source file encoding
         source_encoding = self.detect_encoding(self.file_path)
@@ -197,7 +255,8 @@ class FileProcessorGUI:
                 for i, line in enumerate(lines):
                     lines[i] = self.convert_declaration_format(line, True)
 
-            lines_to_write = [line for line in lines if line.strip() not in ("unit Test;", "interface", "implementation", "end.")]
+            lines_to_write = [line for line in lines if
+                              line.strip() not in ("unit Test;", "interface", "implementation", "end.")]
 
         # restore likes on the content if necessary
         if self.like_handler_var.get():
@@ -216,7 +275,9 @@ class FileProcessorGUI:
             original_file.writelines(lines_to_write)
 
         # Delete the work file
-        os.remove(self.file_path + ".wrk")
+        if not self.keep_work_var:
+            os.remove(self.file_path + ".wrk")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

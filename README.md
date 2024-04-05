@@ -27,27 +27,27 @@ Usage:
 * Function declaration comma Handling:
   * If this box is checked, it will replace all commas in function and procedure declarations with semicolons so that JCF can handle it
   * If "Change declaration delimiters to semicolons" is set then the declaration delimiters will stay semicolons, else they will be changed back to commas after formatting
-* Preprocess 'like' statement: check this box to preprocess the like statement so that JCF can format the code
+* Preprocess 'like' operator: Check this box to preprocess the 'like' operators so that JCF can format the code
+* Make backup (.bak) file: If this is enabled, the file will be copied to a backup file with extra .bak as extension
+* Keep work (.wrk) file: If this is enabled, the .wrk file that is passed to and processed by JCF is kept (for debugging porposes)
 
 **Config File:**
 
 Optionally, you can load your own Config File. Config files made with the GUI of the old [JEDI Code Format](https://jedicodeformat.sourceforge.net/) are automatically detected and converted.
 
+**Processing of 'like' operators:**
 
-
-**Processing of like statements:**
-
-Optionally, the unsupported like statements are preprocessed so that JCF can handle the file. For this a non-comment line (or the non comment part of a line) like this:
+Optionally, the unsupported 'like' operators are preprocessed so that JCF can handle the file. A non-comment line (or the non comment part of a line) will be analysed by a preprocessor. Example:
 
 ```
 if (a=b) and (a like c) and not (c = e) and (e like f)  and (u = i)   and (u = i)  and (a like c) then  // test something like nothing
 ```
 
-will be analysed. Found like statements will each be replaced by a '=' and a comment line will be added above with restoring info:
+Found 'like' operators will each be replaced by a '=' and a comment line will be added above containing restoring info:
 
 ```
 // LIKEPROCESSING_INFO: 1,3,6
 if (a=b) and (a = c) and not (c = e) and (e = f)  and (u = i)   and (u = i)  and (a = c) then  // test something like nothing
 ```
 
-After formatting with JCF, the tool searches for these comment lines and restores the 'like' statements to their original positions. Finally, the like processing comments are removed from the formatted code.
+After formatting with JCF, the tool searches for these comment lines and restores the 'like' operators to their original positions. Finally, the processing comments are removed from the formatted code.
