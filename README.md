@@ -11,9 +11,12 @@ refuse to format DelphiScript Code because it is "not complete".
 Here is a little Python program that:
 
 * Completes your DelphiScript code by inserting "unit Test;" + "interface" + "implementation" at the beginning and "end." at the end
+* Optionally pre- and postprocesses the following elements that make proplems with JCF:
+  * Commas as variable delimiters in function declarations (instead of semicolons)
+  * The 'like' - operator
 * Formats the Result with Quadroids CLI Formatter
 * Removes the formerly added elements from the result and writes the formatted code back
-* A backup of your code will be generated (.bak)
+* A backup of your code can be generated (.bak)
 
 <img title="" src="doc/Prog_0_5.PNG" alt="Program" width="400">
 
