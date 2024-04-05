@@ -15,7 +15,7 @@ Here is a little Python program that:
 * Removes the formerly added elements from the result and writes the formatted code back
 * A backup of your code will be generated (.bak)
 
-<img src="doc/Prog.PNG" title="" alt="Program" width="400">
+<img title="" src="doc/Prog_0_5.PNG" alt="Program" width="400">
 
 Usage:
 
