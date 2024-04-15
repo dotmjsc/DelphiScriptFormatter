@@ -18,7 +18,7 @@ Here is a little Python program that:
 * Removes the formerly added elements from the result and writes the formatted code back
 * A backup of your code can be generated (.bak)
 
-<img title="" src="doc/Prog_0_5.PNG" alt="Program" width="400">
+<img title="" src="doc/Prog_0_6.PNG" alt="Program" width="400">
 
 Usage:
 
@@ -33,6 +33,7 @@ Usage:
 * Preprocess 'like' operator: Check this box to preprocess the 'like' operators so that JCF can format the code
 * Make backup (.bak) file: If this is enabled, the file will be copied to a backup file with extra .bak as extension
 * Keep work (.wrk) file: If this is enabled, the .wrk file that is passed to and processed by JCF is kept (for debugging porposes)
+* Generate Breakpoints: Generate Breakpoints in Altium, see below
 
 **Config File:**
 
@@ -54,3 +55,9 @@ if (a=b) and (a = c) and not (c = e) and (e = f)  and (u = i)   and (u = i)  and
 ```
 
 After formatting with JCF, the tool searches for these comment lines and restores the 'like' operators to their original positions. Finally, the processing comments are removed from the formatted code.
+
+**Generate Breakpoints (for Altium):**
+
+If this checkbox is set, the Program searches for a Altium Scripting Project File (.PrjScr) in the folder where the code file is located. When a single Script Project File is found, and a formatting error is occured, the programm processes the information and generates a breakpoint on the line where the formatting error has occured. Since JCF is pretty strict, this can be used to check for programming errors before running.
+
+<img src="doc/Breakpoints.PNG" title="" alt="Formatting Errors" width="960">

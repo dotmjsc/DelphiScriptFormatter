@@ -7,13 +7,14 @@ import subprocess
 import sys
 import chardet
 
+from error_decoder import extract_error_messages, extract_error_info, find_single_prfscr_file, update_prfscr_file
 from like_handler import like_processing_content_restore, like_processing_content_preprocess
 
 
 class FileProcessorGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title("DelphiScript Formatter 0.5")
+        self.master.title("DelphiScript Formatter 0.6")
 
         # Set minimum window size
         self.master.minsize(width=400, height=150)
@@ -74,6 +75,13 @@ class FileProcessorGUI:
                                                  command=self.update_config_file)
         self.keep_work_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
 
+        self.generate_breakpoints_var = tk.BooleanVar()
+        self.generate_breakpoints_checkbox = tk.Checkbutton(self.master,
+                                                 text="Generate Breakpoints for Errors (to Altium .PrjScr File)",
+                                                 variable=self.generate_breakpoints_var,
+                                                 command=self.update_config_file)
+        self.generate_breakpoints_checkbox.pack(padx=10, pady=(0, 5), anchor=tk.W)
+
         self.open_button = tk.Button(self.master, text="Open", command=self.open_file, width=15, height=2)
         self.open_button.pack(side=tk.LEFT, padx=10, pady=5)
 
@@ -97,6 +105,7 @@ class FileProcessorGUI:
             self.like_handler_var.set(config.getboolean('Settings', 'like_handler'))
             self.generate_bak_var.set(config.getboolean('Settings', 'generate_bak'))
             self.keep_work_var.set(config.getboolean('Settings', 'keep_work_file'))
+            self.generate_breakpoints_var.set(config.getboolean('Settings', 'generate_breakpoints'))
             self.update_checkbox_states()
         except configparser.Error:
             # If there's any issue reading the config file, all checkboxes will be set to default (False)
@@ -109,7 +118,8 @@ class FileProcessorGUI:
             'delimiter_handler': self.delimiter_handler_var.get(),
             'like_handler': self.like_handler_var.get(),
             'generate_bak': self.generate_bak_var.get(),
-            'keep_work_file': self.keep_work_var.get()
+            'keep_work_file': self.keep_work_var.get(),
+            'generate_breakpoints': self.generate_breakpoints_var.get()
         }
         with open('DSF_settings.ini', 'w') as configfile:
             config.write(configfile)
@@ -200,7 +210,22 @@ class FileProcessorGUI:
 
         return line
 
+
+    def process_filename(self, file_name):
+        # Replace forward slashes with backslashes
+        file_name = file_name.replace('/', '\\')
+
+        # Check if the file name has .wrk as extension and remove it
+        if file_name.endswith('.wrk'):
+            file_name = file_name[:-4]
+
+        return file_name
+
     def process_file(self):
+
+        # This is set when a formatting error is found
+        format_error = False
+
         # Make a backup copy with .bak extension
         bak_file_path = self.file_path + ".bak"
         if self.generate_bak_var:
@@ -241,38 +266,75 @@ class FileProcessorGUI:
 
         print(command)
 
-        subprocess.run(command)
+        try:
+            subprocess.check_output(command)
+        except subprocess.CalledProcessError as e:
 
-        # Detect formatted file encoding
-        formatted_encoding = self.detect_encoding(self.file_path + ".wrk")
+            format_error = True
 
-        # After command completion, remove the added lines
-        with open(self.file_path + ".wrk", 'r', encoding=formatted_encoding) as processed_file:
-            lines = processed_file.readlines()
+            # Read output from JCF
+            output = e.output
 
-            # Process declaration formatting
-            if self.comma_handler_var.get() and not self.delimiter_handler_var.get():
-                for i, line in enumerate(lines):
-                    lines[i] = self.convert_declaration_format(line, True)
+            # Decode Bytes to str
+            error_lines = output.decode()
 
-            lines_to_write = [line for line in lines if
-                              line.strip() not in ("unit Test;", "interface", "implementation", "end.")]
+            print(error_lines)
 
-        # restore likes on the content if necessary
-        if self.like_handler_var.get():
-            lines_to_write = like_processing_content_restore(lines_to_write)
+            # if breakpoints should be generated:
+            if self.generate_breakpoints_var:
 
-        # Remove newlines from the beginning
-        while lines_to_write and lines_to_write[0] == "\n":
-            lines_to_write.pop(0)
+                # extract error messages from output: [Error] Message
+                error_lines_processed = extract_error_messages(error_lines)
 
-        # Remove newlines from the end
-        while lines_to_write and lines_to_write[-1] == "\n":
-            lines_to_write.pop()
+                for line in error_lines_processed:
+                    error_info = extract_error_info(line)
+                    filename = error_info.get('file_name')
+                    project_file = find_single_prfscr_file(filename)
 
-        # Save the modified content back to the original .pas file without the added lines
-        with open(self.file_path, 'w', encoding=source_encoding) as original_file:
-            original_file.writelines(lines_to_write)
+                    # Replace forward slashes with backslashes
+                    file_name_sanitized = filename.replace('/', '\\')
+
+                    # Check if the file name has .wrk as extension and remove it
+                    if file_name_sanitized.endswith('.wrk'):
+                        file_name_sanitized = file_name_sanitized[:-4]
+
+                    error_info['file_name'] = file_name_sanitized
+
+                    update_prfscr_file(project_file, error_info, -5)
+
+        # only proceed if formatting was successful
+        if not format_error:
+
+            # Detect formatted file encoding
+            formatted_encoding = self.detect_encoding(self.file_path + ".wrk")
+
+            # After command completion, remove the added lines
+            with open(self.file_path + ".wrk", 'r', encoding=formatted_encoding) as processed_file:
+                lines = processed_file.readlines()
+
+                # Process declaration formatting
+                if self.comma_handler_var.get() and not self.delimiter_handler_var.get():
+                    for i, line in enumerate(lines):
+                        lines[i] = self.convert_declaration_format(line, True)
+
+                lines_to_write = [line for line in lines if
+                                  line.strip() not in ("unit Test;", "interface", "implementation", "end.")]
+
+            # restore likes on the content if necessary
+            if self.like_handler_var.get():
+                lines_to_write = like_processing_content_restore(lines_to_write)
+
+            # Remove newlines from the beginning
+            while lines_to_write and lines_to_write[0] == "\n":
+                lines_to_write.pop(0)
+
+            # Remove newlines from the end
+            while lines_to_write and lines_to_write[-1] == "\n":
+                lines_to_write.pop()
+
+            # Save the modified content back to the original .pas file without the added lines
+            with open(self.file_path, 'w', encoding=source_encoding) as original_file:
+                original_file.writelines(lines_to_write)
 
         # Delete the work file
         if not self.keep_work_var:

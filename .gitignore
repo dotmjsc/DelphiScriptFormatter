@@ -1,0 +1,8 @@
+/venv/
+/pascal-format.exe
+/pascal-format.cfg
+/FormatDS.spec
+/build/
+/.idea
+/__pycache__
+/dist/
