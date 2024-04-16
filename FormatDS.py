@@ -7,7 +7,7 @@ import subprocess
 import sys
 import chardet
 
-from error_decoder import extract_error_messages, extract_error_info, find_single_prfscr_file, update_prfscr_file
+from error_decoder import extract_error_messages, extract_error_info, find_single_prjscr_file, update_prjscr_file
 from like_handler import like_processing_content_restore, like_processing_content_preprocess
 
 
@@ -289,7 +289,7 @@ class FileProcessorGUI:
                 for line in error_lines_processed:
                     error_info = extract_error_info(line)
                     filename = error_info.get('file_name')
-                    project_file = find_single_prfscr_file(filename)
+                    project_file = find_single_prjscr_file(filename)
 
                     # Replace forward slashes with backslashes
                     file_name_sanitized = filename.replace('/', '\\')
@@ -300,7 +300,7 @@ class FileProcessorGUI:
 
                     error_info['file_name'] = file_name_sanitized
 
-                    update_prfscr_file(project_file, error_info, -5)
+                    update_prjscr_file(project_file, error_info, -5)
 
         # only proceed if formatting was successful
         if not format_error:

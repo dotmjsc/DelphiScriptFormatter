@@ -59,19 +59,19 @@ def extract_error_info(error_message):
 
     return error_info
 
-def find_single_prfscr_file(file_name):
+def find_single_prjscr_file(file_name):
     # Extract the path from the file name
     file_path = os.path.dirname(file_name)
 
     print(file_path)
 
     # List files with extension .PrjScr in the directory
-    prfscr_files = [f for f in os.listdir(file_path) if f.upper().endswith('.PRJSCR')]
+    prjscr_files = [f for f in os.listdir(file_path) if f.upper().endswith('.PRJSCR')]
 
-    # If there is only one .PrfScr file, return its complete path
-    if len(prfscr_files) == 1:
-        return os.path.join(file_path, prfscr_files[0])
-    elif len(prfscr_files) == 0:
+    # If there is only one .PrjScr file, return its complete path
+    if len(prjscr_files) == 1:
+        return os.path.join(file_path, prjscr_files[0])
+    elif len(prjscr_files) == 0:
         print('No Project Files found to process!')
         return None
     else:
@@ -79,7 +79,7 @@ def find_single_prfscr_file(file_name):
         return None
 
 
-def update_prfscr_file(file_path, error_info, offset):
+def update_prjscr_file(file_path, error_info, offset):
 
     # check if a error in a line is found
     if file_path is not None and error_info['line_number'] is not None:
@@ -141,6 +141,6 @@ if __name__ == '__main__':
         print(line)
         error_info = extract_error_info(line)
         filename = error_info.get('file_name')
-        project_file = find_single_prfscr_file(filename)
-        update_prfscr_file(project_file, error_info, 0)
+        project_file = find_single_prjscr_file(filename)
+        update_prjscr_file(project_file, error_info, 0)
 
